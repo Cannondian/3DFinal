@@ -13,12 +13,14 @@ public class PlayerStateMachine : MonoBehaviour
     // variables to store optimized setter/getter parameter IDs
     int _isWalkingHash;
     int _isRunningHash;
+    int _isFallingHash;
 
     // variables to store player input values
     Vector2 _currentMovementInput;
     Vector3 _currentMovement;
     Vector3 _currentRunMovement;
     Vector3 _appliedMovement;
+    Vector3 _cameraRelativeMovement;
     bool _isMovementPressed;
     bool _isRunPressed;
 
@@ -28,7 +30,6 @@ public class PlayerStateMachine : MonoBehaviour
     int _zero = 0;
 
     // gravity variables
-    float _groundedGravity = -.05f;
     float _gravity = -9.8f;
 
     // jumping variables
@@ -59,6 +60,7 @@ public class PlayerStateMachine : MonoBehaviour
     public int JumpCount { get { return _jumpCount; } set { _jumpCount = value; } }
     public int IsWalkingHash { get { return _isWalkingHash; } }
     public int IsRunningHash { get { return _isRunningHash; } }
+    public int IsFallingHash { get { return _isFallingHash; } }
     public int IsJumpingHash { get { return _isJumpingHash; } }
     public int JumpCountHash { get { return _jumpCountHash; } }
     public bool IsMovementPressed { get { return _isMovementPressed;  } }
@@ -66,7 +68,7 @@ public class PlayerStateMachine : MonoBehaviour
     public bool RequireNewJumpPress { get { return _requireNewJumpPress; } set { _requireNewJumpPress = value;  } }
     public bool IsJumping { set { _isJumping = value; } }
     public bool IsJumpPressed { get { return _isJumpPressed; } }
-    public float GroundedGravity { get { return _groundedGravity; } }
+    public float Gravity { get { return _gravity; } }
     public float CurrentMovementY { get { return _currentMovement.y; } set { _currentMovement.y = value; } }
     public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = value; } }
     public float AppliedMovementX { get { return _appliedMovement.x; } set { _appliedMovement.x = value; } }
@@ -90,6 +92,7 @@ public class PlayerStateMachine : MonoBehaviour
         // set the parameter hash references
         _isWalkingHash = Animator.StringToHash("isWalking");
         _isRunningHash = Animator.StringToHash("isRunning");
+        _isFallingHash = Animator.StringToHash("isFalling");
         _isJumpingHash = Animator.StringToHash("isJumping");
         _jumpCountHash = Animator.StringToHash("jumpCount");
 
@@ -109,7 +112,7 @@ public class PlayerStateMachine : MonoBehaviour
     void SetUpJumpVariables()
     {
         float timeToApex = _maxJumpTime / 2;
-        _gravity = (-2 * _maxJumpHeight) / Mathf.Pow(timeToApex, 2);
+        float initialGravity = (-2 * _maxJumpHeight) / Mathf.Pow(timeToApex, 2);
         _initialJumpVelocity = (2 * _maxJumpHeight) / timeToApex;
         float secondJumpGravity = (-2 * (_maxJumpHeight + 2)) / Mathf.Pow((timeToApex * 1.25f), 2);
         float secondJumpInitialVelocity = (2 * (_maxJumpHeight + 2)) / (timeToApex * 1.25f);
@@ -120,8 +123,8 @@ public class PlayerStateMachine : MonoBehaviour
         _initialJumpVelocities.Add(2, secondJumpInitialVelocity);
         _initialJumpVelocities.Add(3, thirdJumpInitialVelocity);
 
-        _jumpGravities.Add(0, _gravity);
-        _jumpGravities.Add(1, _gravity);
+        _jumpGravities.Add(0, initialGravity);
+        _jumpGravities.Add(1, initialGravity);
         _jumpGravities.Add(2, secondJumpGravity);
         _jumpGravities.Add(3, thirdJumpGravity);
 
@@ -130,24 +133,55 @@ public class PlayerStateMachine : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        _characterController.Move(_appliedMovement * Time.deltaTime);
     }
 
     // Update is called once per frame
     void Update()
     {
         HandleRotation();
-        _characterController.Move(_appliedMovement * Time.deltaTime);
+
+        _cameraRelativeMovement = ConvertToCameraSpace(_appliedMovement);
+        _characterController.Move(_cameraRelativeMovement * Time.deltaTime);
+
         _currentState.UpdateStates();
+
+    }
+
+    Vector3 ConvertToCameraSpace(Vector3 vectorToRotate)
+    {
+        // store the Y value of the original vector to rotate
+        float currentYValue = vectorToRotate.y;
+
+        // get the forward and right directional vectors of the camera
+        Vector3 cameraForward = Camera.main.transform.forward;
+        Vector3 cameraRight = Camera.main.transform.right;
+
+        // remove the Y values to ignore upward/downward camera angles
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+
+        // re-normalize both vectors so they each have a magnitude of 1
+        cameraForward = cameraForward.normalized;
+        cameraRight = cameraRight.normalized;
+
+        // rotate the X and Z VectorToRotate values to camera space
+        Vector3 cameraForwardZProduct = vectorToRotate.z * cameraForward;
+        Vector3 cameraRightXProduct = vectorToRotate.x * cameraRight;
+
+        // the sum of both products is the Vector3 in camera space
+        Vector3 vectorRotatedToCameraSpace = cameraForwardZProduct + cameraRightXProduct;
+        vectorRotatedToCameraSpace.y = currentYValue;
+        return vectorRotatedToCameraSpace;
     }
 
     void HandleRotation()
     {
         Vector3 positionToLookAt;
         // the change in position our character should point to
-        positionToLookAt.x = _currentMovement.x;
-        positionToLookAt.y = 0.0f;
-        positionToLookAt.z = _currentMovement.z;
+        positionToLookAt.x = _cameraRelativeMovement.x;
+        positionToLookAt.y = _zero;
+        positionToLookAt.z = _cameraRelativeMovement.z;
         // the current rotation of our character
         Quaternion currentRotation = transform.rotation;
 
