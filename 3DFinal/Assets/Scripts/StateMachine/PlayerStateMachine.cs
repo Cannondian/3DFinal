@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerStateMachine : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class PlayerStateMachine : MonoBehaviour
     PlayerInput _playerInput;
     CharacterController _characterController;
     Animator _animator;
+
+    private static PlayerStateMachine _instance;
 
     // variables to store optimized setter/getter parameter IDs
     int _isWalkingHash;
@@ -27,7 +30,7 @@ public class PlayerStateMachine : MonoBehaviour
     // constants
     float _rotationFactorPerFrame = 15.0f;
     float _runMultiplier = 3.0f;
-    int _zero = 0;
+    //int _zero = 0;
 
     // gravity variables
     float _gravity = -9.8f;
@@ -42,6 +45,9 @@ public class PlayerStateMachine : MonoBehaviour
     int _jumpCountHash;
     bool _requireNewJumpPress = false;
     int _jumpCount = 0;
+    public bool _canWallJump = false;
+    private Vector3 _wallNormal;
+
     Dictionary<int, float> _initialJumpVelocities = new Dictionary<int, float>();
     Dictionary<int, float> _jumpGravities = new Dictionary<int, float>();
     Coroutine _currentJumpResetRoutine = null;
@@ -49,6 +55,14 @@ public class PlayerStateMachine : MonoBehaviour
     // state variables
     PlayerBaseState _currentState;
     PlayerStateFactory _states;
+
+    // collectable variables
+    public static int _coins = 0;
+    public static int _hearts = 4;
+    public static int _starPieces = 0;
+
+    // audio clips
+    public AudioSource playerSounds;
 
     // getters and setters
     public PlayerBaseState CurrentState { get { return _currentState; } set { _currentState = value; } }
@@ -68,6 +82,8 @@ public class PlayerStateMachine : MonoBehaviour
     public bool RequireNewJumpPress { get { return _requireNewJumpPress; } set { _requireNewJumpPress = value;  } }
     public bool IsJumping { set { _isJumping = value; } }
     public bool IsJumpPressed { get { return _isJumpPressed; } }
+    public bool CanWallJump { get { return _canWallJump; } set { _canWallJump = value; } }
+    public Vector3 WallNormal { get { return _wallNormal; } set { _wallNormal = value; } }
     public float Gravity { get { return _gravity; } }
     public float CurrentMovementY { get { return _currentMovement.y; } set { _currentMovement.y = value; } }
     public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = value; } }
@@ -79,6 +95,8 @@ public class PlayerStateMachine : MonoBehaviour
     // Awake is called earlier than Start in Unity's event life cycle
     void Awake()
     {
+        _instance = this;
+
         // initially set reference variables
         _playerInput = new PlayerInput();
         _characterController = GetComponent<CharacterController>();
@@ -180,7 +198,7 @@ public class PlayerStateMachine : MonoBehaviour
         Vector3 positionToLookAt;
         // the change in position our character should point to
         positionToLookAt.x = _cameraRelativeMovement.x;
-        positionToLookAt.y = _zero;
+        positionToLookAt.y = 0.001f;
         positionToLookAt.z = _cameraRelativeMovement.z;
         // the current rotation of our character
         Quaternion currentRotation = transform.rotation;
@@ -194,6 +212,25 @@ public class PlayerStateMachine : MonoBehaviour
         }
     }
 
+    public static void HandleDamage()
+    {
+        _instance._HandleDamage();
+    }
+
+    // for when the player takes damage, remove a heart from UI and counter
+    private void _HandleDamage()
+    {
+        HeartsUI.RemoveHeart();
+        _hearts--;
+
+        // if dead, reset level
+        if (_hearts <= 0)
+        {
+            _hearts = 4;
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+    }
+
     // callback handler function to set the player input values
     void OnMovementInput(InputAction.CallbackContext context)
     {
@@ -202,7 +239,7 @@ public class PlayerStateMachine : MonoBehaviour
         _currentMovement.z = _currentMovementInput.y;
         _currentRunMovement.x = _currentMovementInput.x * _runMultiplier;
         _currentRunMovement.z = _currentMovementInput.y * _runMultiplier;
-        _isMovementPressed = _currentMovementInput.x != _zero || _currentMovementInput.y != _zero;
+        _isMovementPressed = _currentMovementInput.x != 0 || _currentMovementInput.y != 0;
     }
 
     // callback handler function for jump buttons
