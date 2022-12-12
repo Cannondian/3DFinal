@@ -10,6 +10,7 @@ public class PlayerStateMachine : MonoBehaviour
     PlayerInput _playerInput;
     CharacterController _characterController;
     Animator _animator;
+    GameMaster _gm;
 
     private static PlayerStateMachine _instance;
 
@@ -45,8 +46,6 @@ public class PlayerStateMachine : MonoBehaviour
     int _jumpCountHash;
     bool _requireNewJumpPress = false;
     int _jumpCount = 0;
-    public bool _canWallJump = false;
-    private Vector3 _wallNormal;
 
     Dictionary<int, float> _initialJumpVelocities = new Dictionary<int, float>();
     Dictionary<int, float> _jumpGravities = new Dictionary<int, float>();
@@ -82,8 +81,6 @@ public class PlayerStateMachine : MonoBehaviour
     public bool RequireNewJumpPress { get { return _requireNewJumpPress; } set { _requireNewJumpPress = value;  } }
     public bool IsJumping { set { _isJumping = value; } }
     public bool IsJumpPressed { get { return _isJumpPressed; } }
-    public bool CanWallJump { get { return _canWallJump; } set { _canWallJump = value; } }
-    public Vector3 WallNormal { get { return _wallNormal; } set { _wallNormal = value; } }
     public float Gravity { get { return _gravity; } }
     public float CurrentMovementY { get { return _currentMovement.y; } set { _currentMovement.y = value; } }
     public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = value; } }
@@ -101,6 +98,8 @@ public class PlayerStateMachine : MonoBehaviour
         _playerInput = new PlayerInput();
         _characterController = GetComponent<CharacterController>();
         _animator = GetComponent<Animator>();
+        _gm = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
+
 
         // setup state
         _states = new PlayerStateFactory(this);
@@ -151,7 +150,13 @@ public class PlayerStateMachine : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Move character to last checkpoint
+        _characterController.enabled = false;
+        _characterController.transform.position = _gm.lastCheckPointPos;
+        _characterController.enabled = true;
+
         _characterController.Move(_appliedMovement * Time.deltaTime);
+
     }
 
     // Update is called once per frame
@@ -227,6 +232,8 @@ public class PlayerStateMachine : MonoBehaviour
         if (_hearts <= 0)
         {
             _hearts = 4;
+            _coins = 0;
+            _starPieces = 0;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }

@@ -25,7 +25,6 @@ public class HeartsUI : MonoBehaviour
         heartsVisible--;
         if(heartsVisible >= 0)
         {
-            Debug.Log("Trying to remove heart");
             hearts[heartsVisible].enabled = false;
         }
     }
@@ -39,7 +38,6 @@ public class HeartsUI : MonoBehaviour
     {
         if (heartsVisible >= 0 && heartsVisible != hearts.Length)
         {
-            Debug.Log("Trying to add heart");
             hearts[heartsVisible].enabled = true;
             heartsVisible++;
             PlayerStateMachine._hearts += 1;
