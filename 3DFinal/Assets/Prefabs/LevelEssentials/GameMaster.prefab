@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c542bf8cbc644c82a4da913366518ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastCheckPointPos: {x: -8, y: 2, z: 10}
+  lastCheckPointPos: {x: 0, y: 0, z: 0}
 --- !u!114 &6528882862160786688
 MonoBehaviour:
   m_ObjectHideFlags: 0

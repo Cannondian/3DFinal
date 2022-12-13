@@ -9,6 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: dae345f1dd12e4232b8f13592e6e967c
   - enabled: 1
-    path: Assets/Scenes/DemoBlock.unity
-    guid: 85ef7debef2224262a4f00d408bbf089
+    path: Assets/Scenes/Tutorial.unity
+    guid: c2ecf93408acf4d14b78d395e05a95ea
+  - enabled: 1
+    path: Assets/Scenes/Level1_Garden.unity
+    guid: 5c965f75a274e43f8b8d42df59ef8e11
+  - enabled: 1
+    path: Assets/Scenes/EndScene.unity
+    guid: afd16009e00ed4128b1b65eb207085f5
   m_configObjects: {}

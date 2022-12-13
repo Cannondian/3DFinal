@@ -18,6 +18,6 @@ public class UI_GameData : MonoBehaviour
         coins = PlayerStateMachine._coins;
         starPieces = PlayerStateMachine._starPieces;
         coinText.text = coins.ToString();
-        starPieceText.text = starPieces.ToString();
+        starPieceText.text = " " + starPieces.ToString() + "/5";
     }
 }

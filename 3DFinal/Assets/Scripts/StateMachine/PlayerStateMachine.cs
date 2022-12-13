@@ -30,6 +30,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     // constants
     float _rotationFactorPerFrame = 15.0f;
+    float _walkMultiplier = 4.0f;
     float _runMultiplier = 8.0f;
     //int _zero = 0;
 
@@ -87,6 +88,7 @@ public class PlayerStateMachine : MonoBehaviour
     public float AppliedMovementX { get { return _appliedMovement.x; } set { _appliedMovement.x = value; } }
     public float AppliedMovementZ { get { return _appliedMovement.z; } set { _appliedMovement.z = value; } }
     public float RunMultiplier { get { return _runMultiplier; } }
+    public float WalkMultiplier { get { return _walkMultiplier; } }
     public Vector2 CurrentMovementInput { get { return _currentMovementInput; } }
 
     // Awake is called earlier than Start in Unity's event life cycle
@@ -236,6 +238,15 @@ public class PlayerStateMachine : MonoBehaviour
             _starPieces = 0;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
+    }
+
+    public static void BeatLevel()
+    {
+        Debug.Log("Warping");
+        _hearts = 4;
+        _coins = 0;
+        _starPieces = 0;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
     // callback handler function to set the player input values
