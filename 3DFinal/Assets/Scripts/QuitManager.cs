@@ -8,6 +8,7 @@ public class QuitManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            Debug.Log("Allow quit");
             Application.Quit();
         }
     }
