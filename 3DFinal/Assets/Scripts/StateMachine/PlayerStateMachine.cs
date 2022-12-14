@@ -242,7 +242,6 @@ public class PlayerStateMachine : MonoBehaviour
 
     public static void BeatLevel()
     {
-        Debug.Log("Warping");
         _hearts = 4;
         _coins = 0;
         _starPieces = 0;
